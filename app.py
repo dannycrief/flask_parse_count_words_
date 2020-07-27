@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, request
 import logging
 
-logging.basicConfig(filename="app.log", level=logging.INFO, format="%(levelname)s: %(message)s")
+logging.basicConfig(filename="../app.log", level=logging.INFO, format="%(levelname)s: %(message)s")
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
@@ -40,12 +40,6 @@ class Tasks(db.Model):
 # TODO: check if only https or http user entered
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # app.logger.debug("TEST INFO DEBUG")
-    # app.logger.info("TEST INFO INFO")
-    # app.logger.warning("TEST INFO WARNING")
-    # app.logger.error("TEST INFO ERROR")
-    # app.logger.critical("TEST INFO CRITICAL")
-
     if request.method == 'GET':
         return render_template('index.html')
     elif request.method == "POST":
