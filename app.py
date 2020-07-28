@@ -16,6 +16,7 @@ DB_URL = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(user=os.environ.g
                                                                db=os.environ.get('POSTGRES_DB', 'parsing_site'))
 
 app = Flask(__name__)
+app.debug = True
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
