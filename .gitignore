@@ -9,3 +9,5 @@ venv/
 app.log
 db.sqlite
 dump.rdb
+
+.env

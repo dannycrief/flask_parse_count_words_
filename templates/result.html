@@ -41,7 +41,7 @@
                 <tbody>
                 {% for result in results %}
                     <tr scope="row">
-                        <th>{{ result._id }}</th>
+                        <th>{{ result.id }}</th>
                         <th><a href="{{ result.address }}">{{ result.address }}</a></th>
                         <th>{{ result.words_count }}</th>
                         <th>{{ result.http_status_code }}</th>
