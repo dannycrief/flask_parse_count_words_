@@ -1,8 +1,8 @@
 FROM python:3.8-alpine
 
-WORKDIR .
+COPY . /app
 
-COPY requirements.txt .
+WORKDIR /app
 
 ENV FLASK_APP app.py
 
@@ -13,8 +13,6 @@ RUN \
  apk add --no-cache --virtual .build-deps gcc python3-dev musl-dev postgresql-dev && \
  python3 -m pip install -r requirements.txt --no-cache-dir && \
  apk --purge del .build-deps
-
-COPY . .
 
 EXPOSE 5000
 

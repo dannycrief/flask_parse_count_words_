@@ -7,13 +7,14 @@ from celery import Celery
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, request
 import logging
+from sqlalchemy_utils import database_exists, create_database, drop_database
 
 logging.basicConfig(filename="app.log", level=logging.INFO, format="%(levelname)s: %(message)s")
 
-DB_URL = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(user=os.environ.get('POSTGRES_USER', 'postgres'),
-                                                               pw=os.environ.get('POSTGRES_PW', '211217ns'),
-                                                               url=os.environ.get('POSTGRES_URL', '127.0.0.1:5432'),
-                                                               db=os.environ.get('POSTGRES_DB', 'parsing_site'))
+DB_URL = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(user=os.getenv('POSTGRES_USER'),
+                                                               pw=os.getenv('POSTGRES_PW'),
+                                                               url=os.getenv('POSTGRES_URL'),
+                                                               db=os.getenv('POSTGRES_DB', 'parsing_site'))
 
 app = Flask(__name__)
 app.debug = True
@@ -52,6 +53,12 @@ class Results(db.Model):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
+        if not database_exists(DB_URL):
+            app.logger.info("Creating database.")
+            create_database(DB_URL)
+
+            app.logger.info("Creating tables.")
+            db.create_all()
         app.logger.info("Found GET method")
         return render_template('index.html')
     elif request.method == "POST":
@@ -108,8 +115,6 @@ def show_results():
 
 @app.cli.command('resetdb')
 def resetdb_command():
-    from sqlalchemy_utils import database_exists, create_database, drop_database
-
     if database_exists(DB_URL):
         app.logger.warning("Deleting database")
         drop_database(DB_URL)
