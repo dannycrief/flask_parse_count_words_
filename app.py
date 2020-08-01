@@ -11,17 +11,13 @@ from sqlalchemy_utils import database_exists, create_database, drop_database
 
 logging.basicConfig(filename="app.log", level=logging.INFO, format="%(levelname)s: %(message)s")
 
-DB_URL = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(user=os.getenv('POSTGRES_USER'),
-                                                               pw=os.getenv('POSTGRES_PW'),
-                                                               url=os.getenv('POSTGRES_URL'),
-                                                               db=os.getenv('POSTGRES_DB', 'parsing_site'))
-
+DB_URL = os.getenv("DATABASE_URL")
 app = Flask(__name__)
 app.debug = True
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-celery = Celery(app.name, broker='redis://localhost', backend='db+' + DB_URL)
+celery = Celery(app.name, broker=os.getenv("CELERY_BROKER_URL"), backend=os.getenv("CELERY_RESULT_BACKEND"))
 
 
 class TaskStatus(enum.Enum):
@@ -52,13 +48,9 @@ class Results(db.Model):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    if not database_exists(DB_URL):
+        resetdb_command()
     if request.method == 'GET':
-        if not database_exists(DB_URL):
-            app.logger.info("Creating database.")
-            create_database(DB_URL)
-
-            app.logger.info("Creating tables.")
-            db.create_all()
         app.logger.info("Found GET method")
         return render_template('index.html')
     elif request.method == "POST":
@@ -80,7 +72,8 @@ def index():
 def parsing_func(_id):
     task = Tasks.query.get(_id)
     task.task_status = 'PENDING'
-    app.logger.info("Task status: PENDING")
+    app.logger.info("Task status: %s" % task.task_status)
+    celery.log("Task status: %s" % task.task_status)
     db.session.commit()
     address = task.address
     with app.app_context():
@@ -113,14 +106,16 @@ def show_results():
     return render_template('result.html', results=results)
 
 
-@app.cli.command('resetdb')
+# @app.cli.command('resetdb')
 def resetdb_command():
     if database_exists(DB_URL):
-        app.logger.warning("Deleting database")
+        app.logger.warning("Deleting database.")
+        print("Deleting database.")
         drop_database(DB_URL)
 
     if not database_exists(DB_URL):
         app.logger.info("Creating database.")
+        print("Creating database.")
         create_database(DB_URL)
 
     app.logger.info("Creating tables.")
