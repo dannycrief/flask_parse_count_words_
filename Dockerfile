@@ -1,7 +1,6 @@
 FROM python:3.8-alpine
 
 COPY . /app
-
 WORKDIR /app
 
 ENV FLASK_APP app.py
@@ -16,5 +15,5 @@ RUN \
 
 EXPOSE 5000
 
-CMD ["flask", "run"]
+#CMD ["flask", "run"]
 
