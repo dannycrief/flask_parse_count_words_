@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block error %}
+    {% if error %}
+        <p><strong> Error: </strong></p>
+        {{ error }}
+    {% endif %}
+{% endblock error %}

@@ -5,19 +5,32 @@ import enum
 from sqlalchemy import Enum
 from celery import Celery
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 import logging
-from sqlalchemy_utils import database_exists, create_database, drop_database
+import json
+from flask_wtf import FlaskForm
+from wtforms import StringField
+from wtforms.validators import DataRequired
+
+
+class FormCheck(FlaskForm):
+    link = StringField('address', validators=[DataRequired()])
+
+
+app = Flask(__name__)
 
 logging.basicConfig(filename="app.log", level=logging.INFO, format="%(levelname)s: %(message)s")
 
-DB_URL = os.getenv("DATABASE_URL")
-app = Flask(__name__)
 app.debug = True
-app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
+app.config["SQLALCHEMY_DATABASE_URI"] = 'postgresql+psycopg2://postgres:211217ns@postgres'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'so-secret-dont-you-dare-to-tell-somebody'
+
+celery = Celery(app.name, broker=os.getenv("CELERY_BROKER_URL", "redis://redis-container"),
+                backend=os.getenv("CELERY_RESULT_BACKEND", "redis://redis-container"))
 db = SQLAlchemy(app)
-celery = Celery(app.name, broker=os.getenv("CELERY_BROKER_URL"), backend=os.getenv("CELERY_RESULT_BACKEND"))
+
+port = int(os.getenv('PORT', 5000))
 
 
 class TaskStatus(enum.Enum):
@@ -46,51 +59,70 @@ class Results(db.Model):
     tasks = db.relationship("Tasks", back_populates="results")
 
 
+class NSQD:
+    def __init__(self, server):
+        self.server = "http://{server}/pub".format(server=server)
+
+    def send(self, topic, message):
+        res = requests.post(self.server, params={'topic': topic}, data=message)
+        if res.ok:
+            return res
+
+
+nsqd = NSQD('nsqd:4151')
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if not database_exists(DB_URL):
-        resetdb_command()
+    formHTML = FormCheck()
     if request.method == 'GET':
         app.logger.info("Found GET method")
-        return render_template('index.html')
+        return render_template('index.html', form=formHTML)
     elif request.method == "POST":
         app.logger.debug("Found method POST")
-        received_link = request.form['receivedLink']
-        app.logger.debug("Got link: %s" % received_link)
-        if received_link != '':
-            app.logger.debug("Received link is not empty")
-            if not received_link.startswith('http') or not received_link.startswith('https'):
-                received_link = 'http://' + received_link
-            session = Tasks(address=received_link, timestamp=datetime.now(), task_status='NOT_STARTED')
-            db.session.add(session)
+        if formHTML.validate_on_submit():
+            received_link = request.form.get('receivedLink')
+            app.logger.debug("Got link: %s" % received_link)
+            task = Tasks(address=received_link, timestamp=datetime.now(), task_status='NOT_STARTED')
+            db.session.add(task)
             db.session.commit()
-            parsing_func.apply_async([session.id], countdown=3, expires=10)
-        return render_template('index.html')
+            get_link.delay(task.id)
+            return redirect(url_for('show_results'))
+        error = 'Your form is fucked up: form validation ERROR'
+        return render_template('error.html', form=formHTML, error=error)
+    return render_template('index.html', form=formHTML)
 
 
 @celery.task
-def parsing_func(_id):
+def get_link(_id):
+    logger = get_link.get_logger()
     task = Tasks.query.get(_id)
     task.task_status = 'PENDING'
-    app.logger.info("Task status: %s" % task.task_status)
+    logger.info("Task status: %s" % task.task_status)
     celery.log("Task status: %s" % task.task_status)
     db.session.commit()
-    address = task.address
-    with app.app_context():
-        parse_url = requests.get(address)
-        parse_status = parse_url.status_code
-        app.logger.error("Status: %s" % parse_status)
-        if parse_url.ok:
-            parse_url = parse_url.text.lower().split()
-            words = parse_url.count('python')
-        task = Tasks.query.get(_id)
-        result = Results(address=address, words_count=words,
-                         http_status_code=parse_status, task_id=task.id)
-        task.http_status = int(parse_status)
-        task.task_status = 'FINISHED'
-        db.session.add(result)
-        db.session.commit()
-        app.logger.info("Task status: FINISHED and successfully committed")
+    received_link = task.address
+    if not received_link.startswith('http') or not received_link.startswith('https'):
+        received_link = 'http://' + received_link
+    nsqd.send('parsed_data', json.dumps({'address': received_link, 'id': str(id)}))
+
+
+@celery.task
+def get_word_count(_id, received_link):
+    count = 0
+    try:
+        res = requests.get(received_link, timeout=10)
+        status = res.status_code
+        if res.ok:
+            words = res.text.lower().split()
+            count = words.count('python')
+    except requests.RequestException:
+        status = 400
+    result = Results(address=received_link, words_count=count, http_status_code=status)
+    task = Tasks.query.get(_id)
+    task.task_status = 'FINISHED'
+    db.session.add(result)
+    db.session.commit()
 
 
 @app.route('/results')
@@ -106,21 +138,6 @@ def show_results():
     return render_template('result.html', results=results)
 
 
-# @app.cli.command('resetdb')
-def resetdb_command():
-    if database_exists(DB_URL):
-        app.logger.warning("Deleting database.")
-        print("Deleting database.")
-        drop_database(DB_URL)
-
-    if not database_exists(DB_URL):
-        app.logger.info("Creating database.")
-        print("Creating database.")
-        create_database(DB_URL)
-
-    app.logger.info("Creating tables.")
-    db.create_all()
-
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    db.create_all()
+    app.run(debug=True, host='0.0.0.0', port=5000)

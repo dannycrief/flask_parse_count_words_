@@ -1,45 +1,20 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
-          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    <link rel="stylesheet" href="/static/css/mainPage.css">
-    <title>Document</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% block main_page %}
+    <div class="bg-image"></div>
 
-
-<div class="bg-image"></div>
-
-<div class="bg-text">
-    <form action="/" method="POST">
-        <h2><label for="receivedLink">Type your link below</label></h2>
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <span class="input-group-text">Your full link</span>
+    <div class="bg-text">
+        <form action="/" method="POST">
+            {{ form.csrf_token }}
+            <h2><label for="receivedLink">Type your link below</label></h2>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Your full link</span>
+                </div>
+                <input type="text" name="receivedLink" id="receivedLink" aria-label="Link" class="form-control"
+                       placeholder="Link">
             </div>
-            <input type="text" name="receivedLink" id="receivedLink" aria-label="Link" class="form-control"
-                   placeholder="Link">
-        </div>
-        <p>Check <a href="/results">here</a> results</p>
-        <button type="submit" class="btn btn-secondary">Submit</button>
-    </form>
-</div>
-
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-        crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
-        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
-        crossorigin="anonymous"></script>
-<script src="/static/js/main.js"></script>
-</body>
-</html>
+            <p>Check <a href="/results">here</a> results</p>
+            <button type="submit" class="btn btn-secondary">Submit</button>
+        </form>
+    </div>
+{% endblock %}
