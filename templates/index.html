@@ -1,12 +1,42 @@
 {% extends 'base.html' %}
 {% block main_page %}
-    <h3>Count word 'python'</h3>
-    <form method="POST">
-        {{ form.csrf_token }}
-        <div class="form-field">
-            {{ form.address(size=100) }}
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input#address {
+            height: 40px;
+            margin-right: 20px;
+        }
+
+        button {
+            height: 40px;
+            font-size: 18px;
+        }
+    </style>
+    <div class="main-content">
+        <div class="row">
+            <form method="POST" class="main-form">
+                {{ form.csrf_token }}
+                <div class="form-field">
+                    {{ form.address(size=100) }}
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                {{ form.submit }}
+            </form>
         </div>
-        <input type="submit" value="Search"/>
-        {{ form.submit }}
-    </form>
+    </div>
+    <script>
+        window.onload = () => {
+            const userInput = document.querySelector('input#address');
+            userInput.setAttribute('class', 'userInput');
+            userInput.setAttribute('placeholder', 'Enter here your link');
+            userInput.setAttribute('required', 'required');
+        };
+    </script>
+
+
 {% endblock %}

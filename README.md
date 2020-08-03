@@ -22,7 +22,11 @@ cd flask_parse_count_words_
 ```
 docker-compose build
 ```
-* Up Docker
+* Fist of all up postgres container
+```
+docker-compose up postgres
+```
+* And up all containers
 ```
 docker-compose up
 ```
