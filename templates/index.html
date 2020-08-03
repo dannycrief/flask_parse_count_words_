@@ -16,6 +16,12 @@
             height: 40px;
             font-size: 18px;
         }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
     <div class="main-content">
         <div class="row">
@@ -27,15 +33,17 @@
                 <button type="submit" class="btn btn-primary">Submit</button>
                 {{ form.submit }}
             </form>
+            <p>Check results <a href="{{ url_for('show_results') }}">here</a></p>
         </div>
     </div>
-    <script>
-        window.onload = () => {
+    <script type='text/javascript'>
+        if (!window.location.hash) {
+            window.location = window.location + '#loaded';
             const userInput = document.querySelector('input#address');
             userInput.setAttribute('class', 'userInput');
             userInput.setAttribute('placeholder', 'Enter here your link');
             userInput.setAttribute('required', 'required');
-        };
+        }
     </script>
 
 
