@@ -10,68 +10,65 @@ services:
          - FLASK_ENV=development
       depends_on:
          - postgres
-         - consumer
          - celery
+         - consumer
 
    consumer:
       container_name: consumer-container
       build:
-        context: .
-        dockerfile: Dockerfile-consumer
+         context: .
+         dockerfile: Dockerfile-consumer
       command: python consumer.py
       depends_on:
-        - nsqd
-
-   postgres:
-      container_name: database_postgres
-      image: postgres:latest
-      ports:
-      - "5432:5432"
-      environment:
-         - POSTGRES_USER=postgres
-         - POSTGRES_PASSWORD=211217ns
-         - POSTGRES_DB=parsing_site
-
-   redis:
-      container_name: redis-container
-      image: redis:latest
+         - nsqd
 
    celery:
       container_name: celery-container
       build:
          context: .
          dockerfile: Dockerfile-celery
+      depends_on:
+         - redis
+
+   postgres:
+      container_name: database_postgres
+      image: postgres:latest
+      ports:
+         - "5432:5432"
       environment:
-         - FLASK_APP=app/app.py
-         - DATABASE_URL=postgresql+psycopg2://postgres:211217ns@postgres:5432/parsing_site
-         - CELERY_BROKER_URL=redis://redis:6379/0
-         - CELERY_RESULT_BACKEND=redis://redis:6379/0
+         - POSTGRES_PASSWORD=211217ns
+
+   redis:
+      container_name: redis-container
+      image: redis:latest
+      ports:
+         - "6379:6379"
 
    nsqlookupd:
       container_name: nsqlookupd-container
       image: nsqio/nsq
       command: /nsqlookupd
       ports:
-      - '4160:4160'
-      - '4161:4161'
+         - '4160:4160'
+         - '4161:4161'
 
    nsqd:
       container_name: nsqd-container
       image: nsqio/nsq
       command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
       depends_on:
-        - nsqlookupd
+         - nsqlookupd
       ports:
-      - '4150:4150'
-      - '4151:4151'
+         - '4150:4150'
+         - '4151:4151'
 
    nsqadmin:
       container_name: nsqadmin-container
       image: nsqio/nsq
       command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
       depends_on:
-        - nsqlookupd
+         - nsqlookupd
       ports:
-      - '4171:4171'
+         - '4171:4171'
 
 

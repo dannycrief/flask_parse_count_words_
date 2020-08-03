@@ -1,45 +1,21 @@
 {% extends 'base.html' %}
 {% block result %}
-
-    <div class="bg-image"></div>
-
-    <div class="link-back">
-        <div class="container">
-            <div class="row">
-                <div class="col">
-                    <p>Go <a href="/">back</a></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <div class="container">
-        <div class="row">
-            {% if results %}
-                <table class="table table-bordered">
-                    <thead class="thead-dark">
-                    <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">URL</th>
-                        <th scope="col">Words count</th>
-                        <th scope="col">HTTP Status</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for result in results %}
-                        <tr scope="row">
-                            <th>{{ result.id }}</th>
-                            <th><a href="{{ result.address }}">{{ result.address }}</a></th>
-                            <th>{{ result.words_count }}</th>
-                            <th>{{ result.http_status_code }}</th>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <h3>There are no results</h3>
-            {% endif %}
-        </div>
-    </div>
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">Address</th>
+            <th scope="col">Количество слов</th>
+            <th scope="col">Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for res in results %}
+            <tr>
+                <td class="c1">{{ res.address }}</td>
+                <td class="c1">{{ res.words_count }}</td>
+                <td class="c4"><span>{{ res.http_status_code }}</span></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}

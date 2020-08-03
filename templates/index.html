@@ -1,20 +1,12 @@
 {% extends 'base.html' %}
 {% block main_page %}
-    <div class="bg-image"></div>
-
-    <div class="bg-text">
-        <form action="/" method="POST">
-            {{ form.csrf_token }}
-            <h2><label for="receivedLink">Type your link below</label></h2>
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Your full link</span>
-                </div>
-                <input type="text" name="receivedLink" id="receivedLink" aria-label="Link" class="form-control"
-                       placeholder="Link">
-            </div>
-            <p>Check <a href="/results">here</a> results</p>
-            <button type="submit" class="btn btn-secondary">Submit</button>
-        </form>
-    </div>
+    <h3>Count word 'python'</h3>
+    <form method="POST">
+        {{ form.csrf_token }}
+        <div class="form-field">
+            {{ form.address(size=100) }}
+        </div>
+        <input type="submit" value="Search"/>
+        {{ form.submit }}
+    </form>
 {% endblock %}
