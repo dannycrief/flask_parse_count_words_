@@ -18,9 +18,13 @@ git clone git@github.com:dannycrief/flask_parse_count_words_.git
 ```
 cd flask_parse_count_words_
 ```
-* And run Docker
+* Build Docker
 ```
-docker-compose up --build
+docker-compose build
+```
+* Up Docker
+```
+docker-compose up
 ```
 
 ## Author
